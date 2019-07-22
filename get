@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\t\n'
+
+key_path="$(dirname "$(readlink -f "$0")")/key"
+
+jwt="${PATH_INFO#/}"
+signature="${jwt##*.}"
+header_and_payload="${jwt%.*}"
+header="${header_and_payload%.*}"
+payload="${header_and_payload#*.}"
+
+signature_base64="$(printf '%s.%s' "$header" "$payload" | openssl dgst -sha256 -mac HMAC -macopt hexkey:"$(cat "$key_path")" | base64 -w 0)"
+signature_base64url="${signature_base64//+/-}"
+signature_base64url="${signature_base64url//\//_}"
+signature_base64url="${signature_base64url//=/}"
+
+if [[ "$signature" !=  "$signature_base64url" ]]; then
+	printf "Status: 401 Unauthorized\n\nUnauthorized."
+    exit
+fi
+
+header_base64="${header//_/\/}"
+header_base64="${header_base64//+/-}"
+while [[ $((${#header_base64} % 4)) -ne 0 ]]; do
+    header_base64="$header_base64="
+done
+header_json="$(base64 --decode <<< "$header_base64")"
+
+expiry="$(jq -rc '.exp' <<< "$header_json")"
+if [[ "$expiry" -lt "$(date +%s)" ]]; then
+	printf "Status: 410 Gone\n\nLink expired."
+    exit
+fi
+
+payload_base64="${payload//_/\/}"
+payload_base64="${payload_base64//+/-}"
+while [[ $((${#payload_base64} % 4)) -ne 0 ]]; do
+    payload_base64="$payload_base64="
+done
+payload_json="$(base64 --decode <<< "$payload_base64")"
+
+path="$(jq -r '.path' <<< "$payload_json")"
+name="${path%/}"
+name="${name##*/}"
+
+name_escaped="$(uconv -x ':: Any-Latin; :: Latin-ASCII; [:^ASCII:] > \_' <<< "$name")"
+name_escaped="${name_escaped//\"/_}"
+
+if [[ -d "$path" ]]; then
+	printf 'Content-Type: application/zip\n'
+	printf 'Content-Disposition: attachment; filename="%s.zip"\n' "$name_escaped"
+	printf '\n'
+	cd "$path"; zip -0 -q -r - .
+elif [[ -f "$path" ]]; then
+	printf 'Content-Type: application/octet-stream\n'
+	printf 'Content-Disposition: attachment; filename="%s"\n' "$name_escaped"
+	printf '\n'
+	cat "$path"
+else
+	printf "Status: 404 Not found\n\nNot found"
+fi

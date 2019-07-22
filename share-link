@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+key_path="$(dirname "$(readlink -f "$0")")/key"
+if ! [[ -f "$key_path" ]]; then
+    echo "No key file found at '$key_path', generating it..."
+    openssl rand -hex 32 >"$key_path"
+fi
+
+expiry="+5min"
+link_prefix=""
+
+function print_help() {
+    echo 'share-link [-e|--expiry expiry] [-l|--link-prefix link_prefix] [--] path'
+    echo 'expiry (optional):      human-readable date string; can be relative; default is 5 minutes from now'
+    echo 'link_prefix (optional): host & path before `get`'
+}
+
+if [[ $# == 0 ]]; then
+    print_help
+    exit
+fi
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -e|--expiry)
+            shift
+            expiry="$1"
+            shift
+        ;;
+        -l|--link-prefix)
+            shift
+            link_prefix="$1"
+            shift
+        ;;
+        -h|--help)
+            print_help
+            exit
+        ;;
+        --)
+            shift
+            break
+        ;;
+        *)
+            break
+        ;;
+    esac
+done
+
+path="$1"
+shift
+
+if [[ $# -ne 0 ]]; then
+    echo "Too many arguments: $@"
+    exit 1
+fi
+
+if [[ "${path:0:1}" != '/' ]]; then
+    echo "Path must be absolute! (invalid path: $path)"
+    exit 1
+fi
+
+header_base64="$(jq -rnc --arg expiry "$(date -d "$expiry" +%s)" '{ typ: "JWT", exp: $expiry | tonumber }' | base64 -w 0)"
+header_base64url="${header_base64//+/-}"
+header_base64url="${header_base64url//\//_}"
+header_base64url="${header_base64url//=/}"
+
+payload_base64="$(jq -rnc --arg path "$path" '{ path: $path }' | base64 -w 0)"
+payload_base64url="${payload_base64//+/-}"
+payload_base64url="${payload_base64url//\//_}"
+payload_base64url="${payload_base64url//=/}"
+
+signature_base64="$(printf '%s.%s' "$header_base64url" "$payload_base64url" | openssl dgst -sha256 -mac HMAC -macopt hexkey:"$(cat "$key_path")" | base64 -w 0)"
+signature_base64url="${signature_base64//+/-}"
+signature_base64url="${signature_base64url//\//_}"
+signature_base64url="${signature_base64url//=/}"
+
+echo "$link_prefix/get/$header_base64url.$payload_base64url.$signature_base64url"
