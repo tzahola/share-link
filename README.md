@@ -25,14 +25,14 @@ Use `share-link` to generate expiring links for your folders/files.
 ### Example:
 
 ```
-$ share-link --expiry tomorrow --link-prefix http://example.com -- /home/foo/bar/document.txt
+$ share-link --expiry tomorrow --link-prefix http://example.com/get/ -- /home/foo/bar/document.txt
 http://example.com/get/eyJ0eXAiOiJKV1QiLCJleHAiOjE1NjM4NzUxOTJ9Cg.eyJwYXRoIjoiL2hvbWUvZm9vL2Jhci9kb2N1bWVudC50eHQifQo.KHN0ZGluKT0gMjMzZWQ4MzRkMWI3OTIxNWMwNTUxYjExOWRmMzZmNzQyNTliYzQwYjYzMzlkNjc2OTkzZTZjNmVmM2NkZjQ0NAo
 ```
 
 ### Arguments:
 
 * Expiry date (`--expiry | -e`): can be any human-readable string that `date` accepts, like *"tomorrow", "+1day", "+1week", etc.*
-* Link prefix (`--link-prefix | -l`): the final link will be this prefix + `/get/[token]`. If omitted then the `SHARE_LINK_PREFIX` environment variable will be used.
+* Link prefix (`--link-prefix | -l`): the final link will be this prefix + the link token. If omitted then the `SHARE_LINK_PREFIX` environment variable will be used.
 
 ## Invalidate links in case of emergency
 
