@@ -9,12 +9,12 @@ if ! [[ -f "$key_path" ]]; then
 fi
 
 expiry="+5min"
-link_prefix=""
+link_prefix="${SHARE_LINK_PREFIX:-}"
 
 function print_help() {
     echo 'share-link [-e|--expiry expiry] [-l|--link-prefix link_prefix] [--] path'
     echo 'expiry (optional):      human-readable date string; can be relative; default is 5 minutes from now'
-    echo 'link_prefix (optional): host & path before `get`'
+    echo 'link_prefix (optional): the URL through which the `get` script is available, e.g. http://example.com/get/'
 }
 
 if [[ $# == 0 ]]; then
@@ -76,4 +76,4 @@ signature_base64url="${signature_base64//+/-}"
 signature_base64url="${signature_base64url//\//_}"
 signature_base64url="${signature_base64url//=/}"
 
-echo "$link_prefix/get/$header_base64url.$payload_base64url.$signature_base64url"
+echo "$link_prefix$header_base64url.$payload_base64url.$signature_base64url"
