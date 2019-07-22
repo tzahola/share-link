@@ -7,7 +7,7 @@ Expiring links for file sharing. Low-tech. Supports downloading whole folders. C
 - `openssl` for HMAC calculation
 - `base64` from GNU coreutils
 - [`jq` for JWT handling](https://stedolan.github.io/jq)
-- [`uconv` from icu-devtools](https://manpages.debian.org/jessie/icu-devtools/uconv.1.en.html) for ASCIIfying download filename
+- [`uconv` from icu-devtools](https://manpages.debian.org/jessie/icu-devtools/uconv.1.en.html) for ASCIIfying the downloaded filename
 - [`zip` via InfoZIP](https://packages.debian.org/buster/zip) for on-the-fly folder downloads
 
 ## Installation
