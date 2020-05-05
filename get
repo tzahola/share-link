@@ -21,7 +21,7 @@ if [[ "$signature" !=  "$signature_base64url" ]]; then
 fi
 
 header_base64="${header//_/\/}"
-header_base64="${header_base64//+/-}"
+header_base64="${header_base64//-/+}"
 while [[ $((${#header_base64} % 4)) -ne 0 ]]; do
     header_base64="$header_base64="
 done
@@ -34,7 +34,7 @@ if [[ "$expiry" -lt "$(date +%s)" ]]; then
 fi
 
 payload_base64="${payload//_/\/}"
-payload_base64="${payload_base64//+/-}"
+payload_base64="${payload_base64//-/+}"
 while [[ $((${#payload_base64} % 4)) -ne 0 ]]; do
     payload_base64="$payload_base64="
 done
