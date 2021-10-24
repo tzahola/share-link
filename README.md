@@ -16,7 +16,9 @@ Expiring links for file sharing. Low-tech. Supports downloading whole folders. C
 - make the `get` CGI script publicly available via your webserver
 - set the `SHARE_LINK_PREFIX` environment variable to the URL of the `get` CGI script (e.g. `export SHARE_LINK_PREFIX="http://example.com/get/"`)
 - `share-link` will generate a 256-bit key on first use; **make sure this is NOT available publicly**
-- for best results disable CGI response buffering on your webserver, e.g. [for lighttpd set `server.stream-response-body = 2`](https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_stream-response-bodyDetails)
+- for best results:
+    - disable CGI response buffering on your webserver, e.g. [for lighttpd set `server.stream-response-body = 2`](https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_stream-response-bodyDetails)
+    - pass the environment variable `X_SENDFILE=1` to the `get` CGI script (e.g. via mod_setenv for lighttpd), if your webserver supports the `X-Sendfile` response header
 
 ## Usage
 

@@ -55,8 +55,13 @@ if [[ -d "$path" ]]; then
 elif [[ -f "$path" ]]; then
 	printf 'Content-Type: application/octet-stream\n'
 	printf 'Content-Disposition: attachment; filename="%s"\n' "$name_escaped"
-	printf '\n'
-	cat "$path"
+	if [[ "$X_SENDFILE" == "1" ]]; then
+		printf 'X-Sendfile: %s\n' "$path"
+		printf '\n'
+	else
+		printf '\n'
+		cat "$path"
+	fi
 else
 	printf "Status: 404 Not found\n\nNot found"
 fi
